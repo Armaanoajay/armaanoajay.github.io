@@ -1,82 +1,82 @@
 <!doctype html>
-});
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Armaano Ajay — Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">AA</div>
+        <div>
+          <div class="name">Armaano Ajay</div>
+          <div class="small">B.Tech Computer Science — Cyber Physical Systems, VIT Chennai</div>
+        </div>
+      </div>
+      <nav>
+        <a href="/publications.html">📄 Publications</a>
+        <a href="/conferences.html">🎤 Conferences</a>
+        <a href="/reviews.html">🔍 Reviewed Journals</a>
+        <a href="/certifications.html">🎓 Certifications</a>
+        <a href="/experience.html">💼 Experience</a>
+      </nav>
+    </header>
 
+    <main class="hero">
+      <section class="card about">
+        <h1>About</h1>
+        <p class="lead">Bachelors in computer science with specialization in Cyber Physical Systems from Vellore Institute of Technology. Interests: deep learning for real‑life applications (biomedical & agriculture), and Internet of Things. Published over 15 research papers across journals and conferences (IEEE, Elsevier, IOP, Springer and Nature).</p>
 
-// Helper: attempt to find year->count pairs in SerpApi response or fallback sample
-function extractYearCitations(obj){
-// if array of {year:.., citations:..}
-function isYearCiteArray(a){
-return Array.isArray(a) && a.length>0 && typeof a[0] === 'object' && ('year' in a[0] || 'citations' in a[0]);
-}
-// search recursively
-const seen = new Set();
-function recurse(o){
-if(!o || typeof o !== 'object' || seen.has(o)) return null;
-seen.add(o);
-if(isYearCiteArray(o)) return o.map(item=>({year:String(item.year||item[0]||''),count:Number(item.citations||item.count||item[1]||0)}));
-if(Array.isArray(o)){
-for(const it of o){
-const r=recurse(it); if(r) return r;
-}
-} else {
-// handle object with two arrays: years & citations
-const keys = Object.keys(o).map(k=>k.toLowerCase());
-if(('years' in o) && ('citations' in o) && Array.isArray(o.years) && Array.isArray(o.citations)){
-return o.years.map((y,i)=>({year:String(y),count:Number(o.citations[i]||0)}));
-}
-for(const k of Object.keys(o)){
-const r=recurse(o[k]); if(r) return r;
-}
-}
-return null;
-}
-return recurse(obj);
-}
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="pubCount">16</div>
+            <div class="stat-label">Publications</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">50</div>
+            <div class="stat-label">Cumulative IF</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="hindex">—</div>
+            <div class="stat-label">H‑index</div>
+          </div>
+        </div>
 
+        <div class="links">
+          <a class="link" href="https://scholar.google.com/citations?user=hX4OlS0AAAAJ&hl=en&oi=ao" target="_blank">🔗 Google Scholar</a>
+          <a class="link" href="http://www.linkedin.com/in/armaano-ajay" target="_blank">🔗 LinkedIn</a>
+          <a class="link" href="https://orcid.org/0009-0009-2752-1352" target="_blank">🔗 ORCID</a>
+          <a class="link" href="http://www.scopus.com/inward/authorDetails.url?authorID=59344036800&partnerID=MN8TOARS" target="_blank">🔗 Scopus</a>
+          <a class="link" href="https://sciprofiles.com/profile/Armaano-Ajay" target="_blank">🔗 SciProfiles</a>
+        </div>
+      </section>
 
-async function loadCitations(){
-// Try to load the raw JSON produced by the GitHub Action
-try{
-const resp = await fetch('/data/citations_raw.json',{cache:'no-store'});
-if(!resp.ok) throw new Error('no raw');
-const json = await resp.json();
-// try to get an h-index if present
-if(json.author && json.author.h_index) document.getElementById('hindex').textContent = json.author.h_index;
-// try to extract year-citation pairs
-const pairs = extractYearCitations(json);
-if(pairs && pairs.length>0){
-renderBarChart(pairs,'data');
-document.getElementById('updatedAt').textContent = 'Updated: data/citations_raw.json';
-return;
-}
-}catch(e){console.log('raw load failed',e)}
+      <aside class="card side">
+        <div class="widget">
+          <h3>Publications Breakdown</h3>
+          <canvas id="pieChart" width="360" height="240"></canvas>
+          <div class="small">11 Journal publications • 5 Conference presentations</div>
+        </div>
 
+        <div class="widget">
+          <h3>Citations — Yearly</h3>
+          <canvas id="barChart" width="360" height="260"></canvas>
+          <div class="small" id="updatedAt">Updated: —</div>
+        </div>
+      </aside>
+    </main>
 
-// fallback: try sample
-try{
-const resp = await fetch('/data/sample_citations.json');
-const sample = await resp.json();
-const pairs = extractYearCitations(sample) || sample;
-renderBarChart(pairs,'sample');
-document.getElementById('updatedAt').textContent = 'Updated: sample data (update action)';
-}catch(e){
-console.error(e);
-document.getElementById('updatedAt').textContent = 'No citation data available';
-}
-}
+    <footer>
+      Built for GitHub Pages — deploy at <strong>armaanoajay.github.io</strong>
+    </footer>
+  </div>
 
-
-function renderBarChart(pairs,source){
-// pairs: [{year:'2019',count:2},...]
-pairs.sort((a,b)=>Number(a.year)-Number(b.year));
-const labels = pairs.map(p=>p.year);
-const counts = pairs.map(p=>p.count);
-const ctx = document.getElementById('barChart').getContext('2d');
-new Chart(ctx,{type:'bar',data:{labels, datasets:[{label:'Citations',data:counts}]}, options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}});
-}
-
-
-loadCitations();
-</script>
+  <script src="/js/citations.js"></script>
+  <script src="/js/main.js"></script>
 </body>
 </html>
