@@ -1,134 +1,82 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Armaano Ajay — Academic CV</title>
-  <link rel="stylesheet" href="style.css" />
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script defer src="script.js"></script>
-</head>
-<body>
-  <header class="site-header">
-    <div class="container header-inner">
-      <div>
-        <h1 class="name">Armaano Ajay</h1>
-        <p class="subtitle">Deep Learning • Computer Vision • AI Research</p>
-        <p class="contact">Mumbai, India · <a href="mailto:armaanoajay1@gmail.com">armaanoajay1@gmail.com</a> · +91 7400372264</p>
-        <p class="links">
-          <a href="https://orcid.org" target="_blank" rel="noopener">ORCID</a> ·
-          <a href="https://scholar.google.com/citations?user=hX4OlS0AAAAJ&hl=en&oi=ao" target="_blank" rel="noopener">Google Scholar</a> ·
-          <a href="https://www.linkedin.com/in/armaano-ajay" target="_blank" rel="noopener">LinkedIn</a> ·
-          <a href="https://www.scopus.com/authid/detail.uri?authorId=59344036800" target="_blank" rel="noopener">Scopus</a> ·
-          <a href="https://github.com/armaano-ajay" target="_blank" rel="noopener">GitHub</a>
-        </p>
-      </div>
-      <div class="header-actions">
-        <a class="btn" href="#" onclick="window.print();return false;">Download PDF</a>
-      </div>
-    </div>
-  </header>
+});
 
-  <main class="container">
-    <section class="card">
-      <h2>Education</h2>
-      <ul class="simple-list">
-        <li><strong>Vellore Institute of Technology (VIT), Chennai</strong> — B.Tech Computer Science (Cyber Physical Systems), CGPA: 8.89 (2021–2025)</li>
-        <li><strong>Apeejay School, Kharghar</strong> — 12th Grade (CBSE), 93%</li>
-        <li><strong>Apeejay School, Kharghar</strong> — 10th Grade (CBSE), 96%</li>
-      </ul>
-    </section>
 
-    <section class="card">
-      <h2>Experience</h2>
-      <ul class="simple-list">
-        <li><strong>Tata Consultancy Services</strong>, Systems Engineer (Nov 2025–Present) — BFSI domain, enterprise-level solutions.</li>
-        <li><strong>Ayathana Designs</strong>, Research Intern — Automated construction cost estimation; CV-based blueprint-image matching.</li>
-        <li><strong>Centre for Cyber Physical Systems</strong>, Deep Learning Research Intern — Dual-track DFU model, co-authored Scientific Reports paper (F1 80%).</li>
-        <li><strong>Centre for Cyber Physical Systems</strong>, Deep Learning Research Intern — Feature-fusion model for crop disease classification; published in IEEE Access.</li>
-      </ul>
-    </section>
+// Helper: attempt to find year->count pairs in SerpApi response or fallback sample
+function extractYearCitations(obj){
+// if array of {year:.., citations:..}
+function isYearCiteArray(a){
+return Array.isArray(a) && a.length>0 && typeof a[0] === 'object' && ('year' in a[0] || 'citations' in a[0]);
+}
+// search recursively
+const seen = new Set();
+function recurse(o){
+if(!o || typeof o !== 'object' || seen.has(o)) return null;
+seen.add(o);
+if(isYearCiteArray(o)) return o.map(item=>({year:String(item.year||item[0]||''),count:Number(item.citations||item.count||item[1]||0)}));
+if(Array.isArray(o)){
+for(const it of o){
+const r=recurse(it); if(r) return r;
+}
+} else {
+// handle object with two arrays: years & citations
+const keys = Object.keys(o).map(k=>k.toLowerCase());
+if(('years' in o) && ('citations' in o) && Array.isArray(o.years) && Array.isArray(o.citations)){
+return o.years.map((y,i)=>({year:String(y),count:Number(o.citations[i]||0)}));
+}
+for(const k of Object.keys(o)){
+const r=recurse(o[k]); if(r) return r;
+}
+}
+return null;
+}
+return recurse(obj);
+}
 
-    <section class="card pub-card">
-      <div class="pub-header">
-        <h2>Research Publications</h2>
-        <div class="if-block">
-          <span class="label">Cumulative Impact Factor</span>
-          <span id="cumulativeIF" class="if-value">—</span>
-        </div>
-      </div>
 
-      <div id="publications" class="publications-list">
-        <!-- Publications will be rendered by script.js -->
-      </div>
-    </section>
+async function loadCitations(){
+// Try to load the raw JSON produced by the GitHub Action
+try{
+const resp = await fetch('/data/citations_raw.json',{cache:'no-store'});
+if(!resp.ok) throw new Error('no raw');
+const json = await resp.json();
+// try to get an h-index if present
+if(json.author && json.author.h_index) document.getElementById('hindex').textContent = json.author.h_index;
+// try to extract year-citation pairs
+const pairs = extractYearCitations(json);
+if(pairs && pairs.length>0){
+renderBarChart(pairs,'data');
+document.getElementById('updatedAt').textContent = 'Updated: data/citations_raw.json';
+return;
+}
+}catch(e){console.log('raw load failed',e)}
 
-    <section class="card">
-      <h2>Conference Presentations</h2>
-      <ul class="simple-list">
-        <li>IoT Smart Parking Fee System — IEEE SCEECS 2025</li>
-        <li>FloodDetectNet — ICETI4T 2025</li>
-        <li>UWB Smart Doorbell System — IEEE ICCCNT</li>
-        <li>ArsenicEnsembleNet — IEEE ICCCNT</li>
-        <li>DeepGastroNet — ICAAIC 2025</li>
-      </ul>
-    </section>
 
-    <section class="card">
-      <h2>Certificates</h2>
-      <ul class="simple-list">
-        <li>OCI Generative AI (Professional) — Oracle</li>
-        <li>OCI Data Science (Professional) — Oracle</li>
-        <li>OCI AI Foundations — Oracle</li>
-        <li>Oracle Database Design</li>
-        <li>Quantum Machine Learning with Python — Udemy</li>
-        <li>Google Cloud Computing Foundations — NPTEL</li>
-        <li>Introduction to Cyber Security — Cisco</li>
-        <li>Financial Market Analysis — Finlatics</li>
-      </ul>
-    </section>
+// fallback: try sample
+try{
+const resp = await fetch('/data/sample_citations.json');
+const sample = await resp.json();
+const pairs = extractYearCitations(sample) || sample;
+renderBarChart(pairs,'sample');
+document.getElementById('updatedAt').textContent = 'Updated: sample data (update action)';
+}catch(e){
+console.error(e);
+document.getElementById('updatedAt').textContent = 'No citation data available';
+}
+}
 
-    <section class="card">
-      <h2>Journals Reviewed For</h2>
-      <ul class="simple-list">
-        <li><strong>Springer:</strong> Scientific Reports, Signal Image and Video Processing, Discover Applied Sciences, Discover AI, Aquaculture International</li>
-        <li><strong>Elsevier:</strong> Biomedical Signal Processing and Control, Reliability Engineering & Systems Safety</li>
-      </ul>
-    </section>
 
-    <section class="card">
-      <h2>Technical Skills & Interests</h2>
-      <ul class="simple-list">
-        <li><strong>Programming:</strong> Python, C++, Java</li>
-        <li><strong>Frameworks:</strong> PyTorch, TensorFlow</li>
-        <li><strong>Cloud / DB:</strong> MySQL, Google Cloud</li>
-        <li><strong>Languages:</strong> English (IELTS 8.5), Hindi, Malayalam, German</li>
-        <li><strong>Interests:</strong> Deep Learning, AI, IoT, Computer Vision</li>
-      </ul>
-    </section>
+function renderBarChart(pairs,source){
+// pairs: [{year:'2019',count:2},...]
+pairs.sort((a,b)=>Number(a.year)-Number(b.year));
+const labels = pairs.map(p=>p.year);
+const counts = pairs.map(p=>p.count);
+const ctx = document.getElementById('barChart').getContext('2d');
+new Chart(ctx,{type:'bar',data:{labels, datasets:[{label:'Citations',data:counts}]}, options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}});
+}
 
-    <section class="card">
-      <h2>Achievements & Extracurriculars</h2>
-      <ul class="simple-list">
-        <li>C.V. Raman Research Award — Awarded for undergraduate research output.</li>
-        <li>Member, Culinary Club — Led event planning & marketing.</li>
-        <li>School Treasurer, Rotary Interact Club — Managed finance & fundraising.</li>
-      </ul>
-    </section>
 
-    <section class="card">
-      <h2>Citations Per Year</h2>
-      <div class="chart-wrap">
-        <canvas id="citationsChart" height="160"></canvas>
-      </div>
-      <p class="note">Data updates automatically via GitHub Actions (scraper -> citations.json).</p>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container">
-      <p>© Armaano Ajay — Generated: <span id="generatedYear"></span></p>
-    </div>
-  </footer>
+loadCitations();
+</script>
 </body>
 </html>
