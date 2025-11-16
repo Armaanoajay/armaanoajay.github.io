@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Name - CV Website</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+    header { background: #1a1a1a; color: white; padding: 40px; text-align: center; }
+    section {
+      background: white; margin: 20px auto; padding: 20px;
+      width: 90%; max-width: 900px; border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 { border-left: 5px solid #1a1a1a; padding-left: 10px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<header>
+  <h1>Your Name</h1>
+  <p>Researcher | Developer | Academic</p>
+</header>
+
+<section>
+  <h2>Google Scholar Citations Per Year</h2>
+  <canvas id="citationsChart"></canvas>
+</section>
+
+<script>
+  fetch("citations.json")
+    .then(r => r.json())
+    .then(data => {
+      const years = Object.keys(data.cited_by_year);
+      const cites = Object.values(data.cited_by_year);
+
+      const ctx = document.getElementById("citationsChart").getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: years,
+          datasets: [{
+            label: "Citations",
+            data: cites,
+            backgroundColor: "rgba(54,162,235,0.6)"
+          }]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+      });
+    });
+</script>
+
+</body>
+</html>
