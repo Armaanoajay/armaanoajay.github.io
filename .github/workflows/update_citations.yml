@@ -1,0 +1,34 @@
+name: Update Google Scholar Citations
+
+on:
+  schedule:
+    - cron: "0 1 * * *" # updates every day at 1 AM UTC
+  workflow_dispatch: # allow manual run
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install scholarly
+        run: |
+          pip install scholarly
+
+      - name: Run fetch script
+        run: python fetch_citations.py
+
+      - name: Commit changes
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+          git add citations.json
+          git diff --quiet || git commit -m "Auto-update citations"
+          git push
