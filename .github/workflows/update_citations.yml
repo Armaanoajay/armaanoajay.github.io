@@ -1,25 +1,31 @@
 name: Update Google Scholar Citations
 
-
 on:
-schedule:
-- cron: '0 2 * * *' # daily at 02:00 UTC (adjust if needed)
-workflow_dispatch: {}
-
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch: {}
 
 jobs:
-fetch:
-runs-on: ubuntu-latest
-steps:
-- name: Checkout
-uses: actions/checkout@v4
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Fetch Google Scholar author JSON from SerpApi
+        env:
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+          SCHOLAR_ID: ${{ secrets.SCHOLAR_ID }}
+        run: |
+          mkdir -p data
+          echo "Calling SerpApi for author $SCHOLAR_ID"
+          URL="https://serpapi.com/search.json?engine=google_scholar_author&author_id=${SCHOLAR_ID}&api_key=${SERPAPI_KEY}"
+          curl -sSf "$URL" -o data/citations_raw.json || (echo 'failed to fetch' && exit 1)
 
-- name: Fetch Google Scholar author JSON from SerpApi
-env:
-SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
-SCHOLAR_ID: ${{ secrets.SCHOLAR_ID }}
-run: |
-echo "Calling SerpApi for author $SCHOLAR_ID"
-URL="https://serpapi.com/search.json?engine=google_scholar_author&author_id=${SCHOLAR_ID}&api_key=${SERPAPI_KEY}"
-curl -sSf "$URL" -o data/citations_raw.json ||
+      - name: Commit data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/citations_raw.json || true
+          git commit -m "chore: update citations from SerpApi" || echo "no changes to commit"
+          git push origin HEAD:${{ github.ref_name }}
