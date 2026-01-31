@@ -88,14 +88,17 @@ body {
 }
 .page-title {
   font-size: 32px;
+  margin-top: 50px;
   margin-bottom: 30px;
 }
 
 .pub-section {
+  margin-top: 50px;
   margin-bottom: 50px;
 }
 
 .pub-section h2 {
+  margin-top: 50px;
   margin-bottom: 20px;
   border-bottom: 2px solid #e0e0e0;
   padding-bottom: 8px;
